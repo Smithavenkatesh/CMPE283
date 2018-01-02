@@ -1,0 +1,151 @@
+diff --git a/arch/x86/kvm/vmx.c b/arch/x86/kvm/vmx.c
+index 4704aaf..8e630d8 100644
+--- a/arch/x86/kvm/vmx.c
++++ b/arch/x86/kvm/vmx.c
+@@ -8219,6 +8219,21 @@ static int (*const kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = {
+ static const int kvm_vmx_max_exit_handlers =
+ 	ARRAY_SIZE(kvm_vmx_exit_handlers);
+ 
++// Smitha Code. Initialize the structure with exit counter, min , max and avg -- Start
++static int total_exit_counter = 0;
++
++typedef struct _exitArrayInfo
++{
++	long exit_counter;
++	long exit_min;
++	long exit_max;
++	long exit_avg;
++}exitArrayInfo;
++
++exitArrayInfo obj_exitArrayInfo[65] = {0}; 
++       
++// Smitha Code -- End
++
+ static bool nested_vmx_exit_handled_io(struct kvm_vcpu *vcpu,
+ 				       struct vmcs12 *vmcs12)
+ {
+@@ -8890,7 +8905,123 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu)
+ 
+ 	if (exit_reason < kvm_vmx_max_exit_handlers
+ 	    && kvm_vmx_exit_handlers[exit_reason])
+-		return kvm_vmx_exit_handlers[exit_reason](vcpu);
++    // Smitha Code -- Start
++	{
++		int start, end, diff,i=0;
++		u32 returnStatement;
++
++		// Declare the string array to hold the name of the exit reasons
++		const char *exitReasonStringArray[66];
++
++
++		exitReasonStringArray[0]  =  "EXIT_REASON_EXCEPTION_NMI";   
++		exitReasonStringArray[1]  =  "EXIT_REASON_EXTERNAL_INTERRUPT";
++		exitReasonStringArray[2]  =  "EXIT_REASON_TRIPLE_FAULT";
++		exitReasonStringArray[3]  =  "";
++		exitReasonStringArray[4]  =  "";
++		exitReasonStringArray[5]  =  "";
++		exitReasonStringArray[6]  =  "";       
++		exitReasonStringArray[7]  =  "EXIT_REASON_PENDING_INTERRUPT";   
++		exitReasonStringArray[8]  =  "EXIT_REASON_NMI_WINDOW";          
++		exitReasonStringArray[9]  =  "EXIT_REASON_TASK_SWITCH";         
++		exitReasonStringArray[10] =  "EXIT_REASON_CPUID"; 
++		exitReasonStringArray[11] =  "";              
++		exitReasonStringArray[12] =  "EXIT_REASON_HLT";                 
++		exitReasonStringArray[13] =  "EXIT_REASON_INVD";                
++		exitReasonStringArray[14] =  "EXIT_REASON_INVLPG";              
++		exitReasonStringArray[15] =  "EXIT_REASON_RDPMC";               
++		exitReasonStringArray[16] =  "EXIT_REASON_RDTSC";
++		exitReasonStringArray[17] =  "";               
++		exitReasonStringArray[18] =  "EXIT_REASON_VMCALL";              
++		exitReasonStringArray[19] =  "EXIT_REASON_VMCLEAR";             
++		exitReasonStringArray[20] =  "EXIT_REASON_VMLAUNCH";            
++		exitReasonStringArray[21] =  "EXIT_REASON_VMPTRLD";             
++		exitReasonStringArray[22] =  "EXIT_REASON_VMPTRST";             
++		exitReasonStringArray[23] =  "EXIT_REASON_VMREAD";              
++		exitReasonStringArray[24] =  "EXIT_REASON_VMRESUME";            
++		exitReasonStringArray[25] =  "EXIT_REASON_VMWRITE";             
++		exitReasonStringArray[26] =  "EXIT_REASON_VMOFF";               
++		exitReasonStringArray[27] =  "EXIT_REASON_VMON";                
++		exitReasonStringArray[28] =  "EXIT_REASON_CR_ACCESS";           
++		exitReasonStringArray[29] =  "EXIT_REASON_DR_ACCESS";           
++		exitReasonStringArray[30] =  "EXIT_REASON_IO_INSTRUCTION";      
++		exitReasonStringArray[31] =  "EXIT_REASON_MSR_READ";            
++		exitReasonStringArray[32] =  "EXIT_REASON_MSR_WRITE";           
++		exitReasonStringArray[33] =  "EXIT_REASON_INVALID_STATE";       
++		exitReasonStringArray[34] =  "EXIT_REASON_MSR_LOAD_FAIL"; 
++		exitReasonStringArray[35] =  "";      
++		exitReasonStringArray[36] =  "EXIT_REASON_MWAIT_INSTRUCTION";   
++		exitReasonStringArray[37] =  "EXIT_REASON_MONITOR_TRAP_FLAG";
++		exitReasonStringArray[38] =  "";   
++		exitReasonStringArray[39] =  "EXIT_REASON_MONITOR_INSTRUCTION"; 
++		exitReasonStringArray[40] =  "EXIT_REASON_PAUSE_INSTRUCTION";  
++		exitReasonStringArray[41] =  "EXIT_REASON_MCE_DURING_VMENTRY";
++		exitReasonStringArray[42] =  "";  
++		exitReasonStringArray[43] =  "EXIT_REASON_TPR_BELOW_THRESHOLD"; 
++		exitReasonStringArray[44] =  "EXIT_REASON_APIC_ACCESS";         
++		exitReasonStringArray[45] =  "EXIT_REASON_EOI_INDUCED";         
++		exitReasonStringArray[46] =  "EXIT_REASON_GDTR_IDTR";           
++		exitReasonStringArray[47] =  "EXIT_REASON_LDTR_TR";             
++		exitReasonStringArray[48] =  "EXIT_REASON_EPT_VIOLATION";       
++		exitReasonStringArray[49] =  "EXIT_REASON_EPT_MISCONFIG";       
++		exitReasonStringArray[50] =  "EXIT_REASON_INVEPT";              
++		exitReasonStringArray[51] =  "EXIT_REASON_RDTSCP";              
++		exitReasonStringArray[52] =  "EXIT_REASON_PREEMPTION_TIMER";    
++		exitReasonStringArray[53] =  "EXIT_REASON_INVVPID";             
++		exitReasonStringArray[54] =  "EXIT_REASON_WBINVD";              
++		exitReasonStringArray[55] =  "EXIT_REASON_XSETBV";              
++		exitReasonStringArray[56] =  "EXIT_REASON_APIC_WRITE";          
++		exitReasonStringArray[57] =  "EXIT_REASON_RDRAND";             
++		exitReasonStringArray[58] =  "EXIT_REASON_INVPCID";             
++		exitReasonStringArray[59] =  "EXIT_REASON_VMFUNC";              
++		exitReasonStringArray[60] =  "EXIT_REASON_ENCLS";               
++		exitReasonStringArray[61] =  "EXIT_REASON_RDSEED";              
++		exitReasonStringArray[62] =  "EXIT_REASON_PML_FULL";           
++		exitReasonStringArray[63] =  "EXIT_REASON_XSAVES";              
++		exitReasonStringArray[64] =  "EXIT_REASON_XRSTORS";     
++
++		start = rdtsc();
++		total_exit_counter++;
++		obj_exitArrayInfo[exit_reason].exit_counter++;
++
++		returnStatement = kvm_vmx_exit_handlers[exit_reason](vcpu);
++		end = rdtsc();
++		diff = end - start;
++
++		// Calculate minimum cycle
++		if(obj_exitArrayInfo[exit_reason].exit_min == 0 || diff < obj_exitArrayInfo[exit_reason].exit_min)
++		{
++			obj_exitArrayInfo[exit_reason].exit_min = diff;
++		}
++
++		// Calculate maximum cycle
++		if(obj_exitArrayInfo[exit_reason].exit_max == 0 || diff > obj_exitArrayInfo[exit_reason].exit_max)
++		{
++			obj_exitArrayInfo[exit_reason].exit_max = diff;
++		}
++
++		// Calculate average cycle
++		obj_exitArrayInfo[exit_reason].exit_avg = total_exit_counter/(obj_exitArrayInfo[exit_reason].exit_counter);
++
++		if(total_exit_counter % 1000 == 0)
++		{
++			printk("Smitha: Exit Reason Begin\n");
++			printk(KERN_INFO "Smitha: Total cycles for all exit = %d", total_exit_counter);
++			for(i =0;i<65;i++)
++			{
++				if(exitReasonStringArray[i]!="" && obj_exitArrayInfo[i].exit_counter!=0)
++				{	
++					printk(KERN_INFO "Smitha:Exit Reason: %s\t\t Number of exits:%d \t\t Minimum cycles: %d \t\t Maximum cycles: %d \t\t Average cycles: %d \n",exitReasonStringArray[i], obj_exitArrayInfo[i].exit_counter, obj_exitArrayInfo[i].exit_min, obj_exitArrayInfo[i].exit_max, obj_exitArrayInfo[i].exit_avg);
++				}
++
++			}
++			
++		}
++		
++		return returnStatement;
++	}
++	// Smitha Code -- End
++
+ 	else {
+ 		vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n",
+ 				exit_reason);
