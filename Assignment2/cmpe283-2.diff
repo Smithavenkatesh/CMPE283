@@ -1,0 +1,59 @@
+diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
+index 0099e10..6d04800 100644
+--- a/arch/x86/kvm/cpuid.c
++++ b/arch/x86/kvm/cpuid.c
+@@ -890,18 +890,49 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
+ 
+ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
+ {
+-	u32 eax, ebx, ecx, edx;
++	u32 temp_eax,eax, ebx, ecx, edx;
++	static bool flag_eax = false;
+ 
+ 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
+ 		return 1;
+ 
+ 	eax = kvm_register_read(vcpu, VCPU_REGS_RAX);
+ 	ecx = kvm_register_read(vcpu, VCPU_REGS_RCX);
++
++	temp_eax = eax;
++	if(temp_eax == 0x4FFFFFFF)
++		flag_eax=!flag_eax;
++	
++	printk(KERN_INFO "temp eax: %x",temp_eax);
++	printk(KERN_INFO "flag eax: %d",flag_eax);
++	
+ 	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+-	kvm_register_write(vcpu, VCPU_REGS_RAX, eax);
+-	kvm_register_write(vcpu, VCPU_REGS_RBX, ebx);
+-	kvm_register_write(vcpu, VCPU_REGS_RCX, ecx);
+-	kvm_register_write(vcpu, VCPU_REGS_RDX, edx);
++
++	if(temp_eax == 0 && flag_eax){
++		printk("CPUID is in flag_eax==1, and setting ebx,ecx,edx to CMPE_283CMPE\n");
++		((char *)&ebx)[0] = 'C';
++		((char *)&ebx)[1] = 'M';
++		((char *)&ebx)[2] = 'P';
++		((char *)&ebx)[3] = 'E';
++
++		((char *)&edx)[0] = '_';
++		((char *)&edx)[1] = '2';
++		((char *)&edx)[2] = '8';
++		((char *)&edx)[3] = '3';
++
++		((char *)&ecx)[0] = 'C';
++		((char *)&ecx)[1] = 'M';
++		((char *)&ecx)[2] = 'P';
++		((char *)&ecx)[3] = 'E';
++
++		}
++
++		kvm_register_write(vcpu, VCPU_REGS_RAX, eax);
++		kvm_register_write(vcpu, VCPU_REGS_RBX, ebx);
++		kvm_register_write(vcpu, VCPU_REGS_RCX, ecx);
++		kvm_register_write(vcpu, VCPU_REGS_RDX, edx);
++		
++
+ 	return kvm_skip_emulated_instruction(vcpu);
+ }
+ EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
