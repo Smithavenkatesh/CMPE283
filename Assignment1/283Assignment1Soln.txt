@@ -1,0 +1,90 @@
+Git Commit ID:
+commit: 076264ada9a307300be7a4581165f9c9deed5d1b
+
+Submission Details:
+Name: Smitha Venkatesh
+
+Steps:
+Install Ubuntu 16.04LTS on Hard disk.
+
+Check if VMX is enabled
+	1)$sudo apt-get update
+
+	2)$sudo apt-get install cpu-checker
+	
+	3)$ kvm-ok
+		[/dev/kvm exists. KVM acceleration can be used]
+
+Downloading Linux kernel code
+	1)$git clone https://github.com/torvalds/linux.git
+		[This is cloning to local repository  /linux]
+	
+	2)Go to the local directory (/linux) cd linux
+
+	3)Type git log
+		commit 076264ada9a307300be7a4581165f9c9deed5d1b
+		Merge: 0f38071 41dcf19
+		Author: Linus Torvalds <torvalds@linux-foundation.org>
+		Date:   Thu Oct 5 15:17:40 2017 -0700
+
+	4)$sudo apt-get install libncurses5-dev
+
+	5)$make menuconfig
+		
+	6)$sudo apt-get install libssl-dev
+	
+	7)$sudo make && sudo make modules && sudo make modules_install && sudo make install
+	
+	8)$uname -r
+		4.10.0-28-generic
+
+	9)Reboot
+
+	10)$uname -r
+		4.14.0-rc3+
+
+	11)Added 2 files (cmpe283-1.c and Makefile ) to directory linux/cmpe283. 
+	
+	12)$git add cmpe283/Makefile cmpe283/cmpe283-1.c
+
+	13)$git config --global user.email "smithav17@gmail.com"
+
+	14)$git config --global user.name "Smitha"
+	
+	15)$git commit -a
+	
+	16)Go to the the directory /linux/cmpe283
+	
+	17)$make clean
+	
+	18)$make all
+	
+	19)$sudo insmod cmpe283-1.ko
+	
+	20)$dmesg
+	
+	21)Implement code to check th assignment functionalities.
+	
+	22)$git add Makefile cmpe283-1.c
+	
+	23)$git config --global user.email "smithav17@gmail.com"
+	
+	24)$git config --global user.name "Smitha"
+	
+	25)$git commit -a
+	
+	26)$git diff HEAD~2 > cmpe283-1.diff 
+		[ Since I had commited twice from the original linux kernel I gave 2]
+
+
+		
+
+
+
+
+
+
+
+
+
+
